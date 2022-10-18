@@ -1,27 +1,47 @@
-SHELL=/bin/bash
-.PHONY: watch lint clean install
-COMMAND_PATH=$(PWD)/difftest/commands
-APP_NAME?=$(shell basename `pwd`)
-MAX_CONCURRENCY?=1
-export FORKULATOR_TEMP=$(PWD)/temp
-watch:
-	@mkdir -p $(FORKULATOR_TEMP)
-	COMMAND_PATH=$(COMMAND_PATH) MAX_CONCURRENCY=$(MAX_CONCURRENCY) ./node_modules/.bin/supervisor --watch 'src/,./' --ignore "./test"  -e "litcoffee,coffee,js" --exec make run-server
+SHELL:=/usr/bin/env bash -euo pipefail -c
+NAME:=forkulator
+LABEL:=$(NAME):latest
 
-lint:
-	find ./src -name '*.coffee' | xargs ./node_modules/.bin/coffeelint -f ./etc/coffeelint.conf
-	find ./src -name '*.js' | xargs ./node_modules/.bin/jshint 
+main:
+	echo $(LABEL)
+	@>&2 echo "no supported default option"; false
 
-install: node_modules/
+build:
+	# https://www.docker.com/blog/introduction-to-heredocs-in-dockerfiles/
+	# https://www.stereolabs.com/docs/docker/building-arm-container-on-x86/
+	DOCKER_BUILDKIT=1 \
+		docker build \
+		--tag "$(LABEL)" \
+		.
 
-node_modules/:
-	npm install .
+# attach to the running debug instance
+shell:
+	docker exec \
+		--interactive \
+		--tty \
+		"$(NAME)" \
+		"/bin/bash"
 
-build_output/: node_modules/
-	mkdir -p build_output
+# run the container using only the shell
+run-shell:
+	docker run \
+		--interactive \
+		--tty \
+		--rm \
+		--volume "$(shell pwd)/../forkulator-commands:/forkulator/commands:ro" \
+		--entrypoint '' \
+		"$(NAME)" \
+		"/bin/bash"
 
-run-server: build_output/
-	exec bash -c "export APP_NAME=${APP_NAME}; test -r ~/.${APP_NAME}.env && . ~/.${APP_NAME}.env ; exec ./node_modules/.bin/coffee server.coffee"
+debug: build
+	# LOCAL_PORT:CONTAINER_PORT
+	docker run \
+		--interactive \
+		--tty \
+		--rm \
+		--name "$(NAME)" \
+		--publish 9000:3000 \
+		--volume "$(shell pwd)/../forkulator-commands:/forkulator/commands:ro" \
+		"$(LABEL)"
 
-clean:
-	rm -rf ./node_modules/
+.PHONY: main build shell run-shell debug

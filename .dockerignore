@@ -1,0 +1,4 @@
+.git/
+Dockerfile
+Makefile
+node_modules/
