@@ -46,7 +46,6 @@ RUN chmod +x /tini
 
 WORKDIR /forkulator
 COPY package.json .
-ENV FORKULATOR_TEMP /tmp
 RUN <<DOC
 npm config set strict-ssl false
 npm install

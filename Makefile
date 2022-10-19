@@ -39,6 +39,7 @@ debug: build
 		--interactive \
 		--tty \
 		--rm \
+		--env FORKULATOR_TEMP=/tmp \
 		--name "$(NAME)" \
 		--publish 9000:3000 \
 		--volume "$(shell pwd)/../forkulator-commands:/forkulator/commands:ro" \
