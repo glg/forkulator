@@ -33,7 +33,7 @@ requestCounter = 0
 countOfCurrentlyExecutingRequests = 0
 
 createTempFileName = (suffix) ->
-  process.pid + "" + requestCounter + "-" + suffix
+  process.pid + requestCounter + "-" + suffix
 
 createTempFilePath = (prefix) ->
   path.join config.outputDirectory, createTempFileName(prefix)
