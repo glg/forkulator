@@ -34,7 +34,7 @@ set -e
 DOC
 
 RUN <<DOC
-apt-get install -y curl
+apt-get install -y curl ssh
 #apt-get --assume-yes install nodejs npm
 curl -fsSL https://deb.nodesource.com/setup_5.x | bash - &&\
 apt-get install -y --force-yes nodejs
