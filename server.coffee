@@ -33,13 +33,14 @@ requestCounter = 0
 countOfCurrentlyExecutingRequests = 0
 
 createTempFileName = (suffix) ->
-  process.pid + requestCounter + "-" + suffix
+  process.pid + "" + requestCounter + "-" + suffix
 
 createTempFilePath = (prefix) ->
   path.join config.outputDirectory, createTempFileName(prefix)
 
 executeThrottled = (req, res) ->
   requestCounter++
+  console.log "tempFileName #{createTempFileName("testing")}"
   # if we've not disabled throttling ( set to -1 ) then we see that we're running no
   # more than our maximum allowed concurrent requests
   if config.maxConcurrentRequests is -1 || (countOfCurrentlyExecutingRequests < config.maxConcurrentRequests)
@@ -93,6 +94,9 @@ handleRequest = (req, res) ->
       context =
         commandFilePath: path.join(config.commandPath, req.path)
         commandPath: req.path
+        outfilePath: createTempFilePath('stdout')
+        errfilePath: createTempFilePath('stderr')
+        stdinfilePath: createTempFilePath('stdin')
         requestData:
           url: req.url
           query: if _.isEmpty(req.query) then null else req.query
@@ -133,7 +137,7 @@ handleRequest = (req, res) ->
     # then we're going to open the file that will contain the information
     # we'll be passing to the command via stdin
     .then (context) ->
-      returnWhen(context, stdinfileStream: openForWrite(createTempFilePath 'stdin'))
+      returnWhen(context, stdinfileStream: openForWrite(context.stdinfilePath))
     # and now we write our data to the stdin file
     .then (context) ->
       returnWhen(context, stdinWriteStream: writeAndClose(JSON.stringify(context.requestData), context.stdinfileStream))
@@ -144,8 +148,8 @@ handleRequest = (req, res) ->
     .then (context) ->
       whenTheseAreDone =
         stdinfileStream: openForRead(context.stdinWriteStream.path)
-        outfileStream: openForWrite(createTempFilePath 'stdout')
-        errfileStream: openForWrite(createTempFilePath 'stderr')
+        outfileStream: openForWrite(context.outfilePath)
+        errfileStream: openForWrite(context.errfilePath)
       returnWhen(context, whenTheseAreDone)
     # now we fire up the command process as requested, piping in the 
     # request data we have via stdin
