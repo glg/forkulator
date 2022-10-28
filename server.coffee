@@ -40,7 +40,6 @@ createTempFilePath = (prefix) ->
 
 executeThrottled = (req, res) ->
   requestCounter++
-  console.log "tempFileName #{createTempFileName("testing")}"
   # if we've not disabled throttling ( set to -1 ) then we see that we're running no
   # more than our maximum allowed concurrent requests
   if config.maxConcurrentRequests is -1 || (countOfCurrentlyExecutingRequests < config.maxConcurrentRequests)
