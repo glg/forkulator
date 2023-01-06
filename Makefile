@@ -28,6 +28,10 @@ run-shell:
 		--interactive \
 		--tty \
 		--rm \
+		--env DEBUG=true \
+    --env AWS_ACCESS_KEY_ID \
+		--env AWS_SECRET_ACCESS_KEY \
+	  --env AWS_SECURITY_TOKEN \
 		--volume "$(shell pwd)/../forkulator-commands:/forkulator/commands:ro" \
 		--entrypoint '' \
 		"$(NAME)" \
@@ -40,6 +44,10 @@ debug: build
 		--tty \
 		--rm \
 		--env FORKULATOR_TEMP=/tmp \
+		--env DEBUG=true \
+    --env AWS_ACCESS_KEY_ID \
+		--env AWS_SECRET_ACCESS_KEY \
+	  --env AWS_SECURITY_TOKEN \
 		--name "$(NAME)" \
 		--publish 9000:3000 \
 		--volume "$(shell pwd)/../forkulator-commands:/forkulator/commands:ro" \
