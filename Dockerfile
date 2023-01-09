@@ -1,40 +1,29 @@
 # syntax=docker/dockerfile:1.3-labs
 FROM ubuntu:14.04
 
+# install shared packages that will be used by other steps
 RUN <<DOC
 apt-get update
 apt-get install smbclient --assume-yes
-apt-get install awscli --assume-yes
 apt-get install jq --assume-yes
 apt-get install bc --assume-yes
-# old version of aws cli doesn't support the features we need
-
-## This is a working set of steps as of Nov 5, 2018 to get a modern
-## version of the AWS Cli running on Ubuntu 14.04.  Every few months
-## the endzone moves and upstream complications add complexity to the
-## process.  As such, it's possible this will need more adjustments
-## at a later date.  This may be removable when support for Ubuntu 14.04
-## is deprecated.
-set +e
-## Because:  https://github.com/aws/aws-cli/issues/2999#issuecomment-356019306
-
-pip uninstall boto3 -y
-pip uninstall boto -y
-pip uninstall botocore -y
-# Fix bug caused by apt/ubuntu
-rm -rf /usr/local/lib/python2.7/dist-packages/botocore-*.dist-info
-pip install botocore --force-reinstall --upgrade
-#######
-## Because: https://github.com/aws/aws-cli/issues/3007#issuecomment-350797161
-pip install --upgrade s3transfer
-rm -rf /tmp/pip_build_root/PyYAML
-apt-get install libyaml-dev
-pip install awscli --force-reinstall --upgrade
-set -e
+apt-get install curl --assume-yes
+apt-get install ssh --assume-yes
+apt-get install unzip --assume-yes
+rm -rf /var/lib/apt/lists/*
 DOC
 
+# Install AWS CLI v2
 RUN <<DOC
-apt-get install -y curl ssh
+  set -e
+  curl -sL https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip -o /tmp/awscliv2.zip
+  unzip -q /tmp/awscliv2.zip -d /tmp
+  /tmp/aws/install
+  rm -rf /tmp/awscliv2.zip /tmp/aws
+DOC
+
+# Install Node 5.x
+RUN <<DOC
 #apt-get --assume-yes install nodejs npm
 curl -fsSL https://deb.nodesource.com/setup_5.x | bash - &&\
 apt-get install -y --force-yes nodejs
